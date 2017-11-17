@@ -84,8 +84,9 @@ func main() {
 
 	e := echo.New()
 
-	fs := http.FileServer(http.Dir(path.Join(AppPath, "kakin")))
-	e.GET("/*", echo.WrapHandler(fs))
+	fs := http.FileServer(http.Dir(path.Join(AppPath, "kakin", "dist")))
+	e.GET("/dist/*", echo.WrapHandler(http.StripPrefix("/dist/", fs)))
+	e.File("/", path.Join(AppPath, "kakin", "index.html"))
 
 	e.POST("/api/v1/verify", VerifyAccount)
 	e.POST("/api/v1/account", GetAccount)
