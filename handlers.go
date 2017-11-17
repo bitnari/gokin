@@ -101,6 +101,7 @@ func GetAccount(e echo.Context) error {
 	}
 
 	return e.JSON(http.StatusOK, R {
+		"res": ResSuccess,
 		"id": account.Id,
 		"gold": account.Gold,
 	})
