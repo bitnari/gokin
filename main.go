@@ -11,11 +11,13 @@ import (
 	"log"
 	"fmt"
 	"net/http"
+	"errors"
 )
 
 type Config struct {
 	Server struct {
 		Port        int `json:"port"`
+		CreditPriority string `json:"creditPriority"`
 	} `json:"server"`
 	DB struct {
 		Host        string `json:"host"`
@@ -76,6 +78,10 @@ func init() {
 }
 
 func main() {
+	if config.Server.CreditPriority != "gold" && config.Server.CreditPriority != "credit" {
+		panic(errors.New(`config creditPriority must be "credit" or "gold"`))
+	}
+
 	mongo = MongoConnection{}
 	err := mongo.Init(config.DB.Host, config.DB.DB)
 	if err != nil {
@@ -92,6 +98,11 @@ func main() {
 	e.POST("/api/v1/account", GetAccount)
 	e.POST("/api/v1/renew", RenewToken)
 	e.POST("/api/v1/usegold", SubtractGold)
+
+	e.POST("/api/v2/verify", VerifyAccount)
+	e.POST("/api/v2/pay", Pay_v2)
+	e.POST("/api/v2/renew", RenewToken)
+	e.POST("/api/v2/account", Account_v2)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Server.Port)))
 }

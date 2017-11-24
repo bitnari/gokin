@@ -16,6 +16,7 @@ var (
 type Account struct {
 	Id          string
 	Hash        string
+	Credit		int
 	Gold        int
 }
 
@@ -39,7 +40,7 @@ func (m *MongoConnection) Init(host, db string) (err error) {
 	return nil
 }
 
-func (m *MongoConnection) AddAccount(id, password string, defaultGold int) (err error) {
+func (m *MongoConnection) AddAccount(id, password string, defaultCredit int, defaultGold int) (err error) {
 	count, err := m.account.Find(bson.M{"id": id}).Count()
 	if err != nil {
 		return
@@ -54,7 +55,7 @@ func (m *MongoConnection) AddAccount(id, password string, defaultGold int) (err 
 		return
 	}
 
-	m.account.Insert(&Account {id, string(hash), defaultGold})
+	m.account.Insert(&Account {id, string(hash), defaultCredit, defaultGold})
 	return
 }
 
@@ -86,6 +87,11 @@ func (m *MongoConnection) SubtractGold(id string, gold int) (err error) {
 	}
 
 	err = m.account.Update(bson.M{"id": account.Id}, bson.M{"$set": bson.M{"gold": account.Gold - gold}})
+	return
+}
+
+func (m *MongoConnection) SetCredit(id string, gold, credit int) (err error) {
+	err = m.account.Update(bson.M{"id": id}, bson.M{"$set": bson.M{"gold": gold, "credit": credit}})
 	return
 }
 

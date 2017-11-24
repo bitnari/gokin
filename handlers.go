@@ -18,6 +18,7 @@ const (
 	ResErrInvalidToken
 	ResErrNoToken
 	ResErrNoGold
+	ResErrInvalidCredit
 )
 
 var tokens = TokenManager {[]Token{}}
@@ -31,7 +32,7 @@ func RegisterHandler(e echo.Context) error {
 	}
 	password := e.FormValue("password")
 
-	err := mongo.AddAccount(id, password, 0)
+	err := mongo.AddAccount(id, password, 0, 0)
 	if err == ErrAccountExist {
 		return e.JSON(http.StatusTeapot, R {
 			"res": ResErrAccountAlreadyExists,
@@ -55,7 +56,7 @@ func VerifyAccount(e echo.Context) error {
 	err := mongo.VerifyAccount(id, password)
 	if err != nil {
 		if err == ErrNoAccount {
-			err := mongo.AddAccount(id, password, 0)
+			err := mongo.AddAccount(id, password, 0,0)
 			if err == ErrAccountExist {
 				return e.JSON(http.StatusTeapot, R {
 					"res": ResErrAccountAlreadyExists, // ???????!?????!?!?!?!?
