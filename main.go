@@ -109,7 +109,8 @@ func main() {
 	e.POST("/api/v1/renew", RenewToken)
 	e.POST("/api/v1/usegold", SubtractGold)
 
-	e.POST("/api/v2/verify", VerifyAccount)
+	e.POST("/api/v2/register", RegisterHandler)
+	e.POST("/api/v2/verify", VerifyAccount_v2)
 	e.POST("/api/v2/pay", Pay_v2)
 	e.POST("/api/v2/renew", RenewToken)
 	e.POST("/api/v2/account", Account_v2)

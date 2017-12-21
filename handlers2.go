@@ -67,6 +67,38 @@ func Pay_v2(e echo.Context) error {
 	})
 }
 
+func VerifyAccount_v2(e echo.Context) error {
+	id := toId(e.FormValue("grade"), e.FormValue("class"), e.FormValue("id"))
+	if len(id) != 5 {
+		return e.JSON(http.StatusBadRequest, R {
+			"res": ResErrIdLenMismatch, // 유저이름의 문자열 길이가 틀리다
+		})
+	}
+	password := e.FormValue("password")
+
+	err := mongo.VerifyAccount(id, password)
+	if err != nil {
+		if err == ErrNoAccount {
+			return e.JSON(http.StatusUnauthorized, R {
+				"res": ResErrNoAccount,
+			})
+		}else if err == ErrIncorrectPassword {
+			return e.JSON(http.StatusUnauthorized, R {
+				"res": ResErrIncorrectPassword,
+			})
+		}else{
+			return e.JSON(http.StatusInternalServerError, R {
+				"res": ResErrUnknown,
+			})
+		}
+	}
+
+	return e.JSON(http.StatusOK, R {
+		"res": ResSuccess, // 성공
+		"token": tokens.New(id).Token,
+	})
+}
+
 func Account_v2(e echo.Context) error {
 	token := e.FormValue("token")
 	if len(token) != 32 {

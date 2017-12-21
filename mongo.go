@@ -41,7 +41,7 @@ func (m *MongoConnection) Init(host, db string) (err error) {
 	return nil
 }
 
-func (m *MongoConnection) AddAccount(id, password string, defaultCredit int, defaultGold int) (err error) {
+func (m *MongoConnection) AddAccount(id, password string, defaultCredit, defaultGold int) (err error) {
 	count, err := m.account.Find(bson.M{"id": id}).Count()
 	if err != nil {
 		return
