@@ -96,3 +96,46 @@ func Account_v2(e echo.Context) error {
 		"credit": account.Credit,
 	})
 }
+
+func Score_v2(e echo.Context) error {
+	token := e.FormValue("token")
+	if len(token) != 32 {
+		return e.JSON(http.StatusBadRequest, R {
+			"res": ResErrInvalidToken,
+		})
+	}
+
+	t, err := tokens.Get(token)
+	if err != nil {
+		return e.JSON(http.StatusUnauthorized, R {
+			"res": ResErrNoToken,
+		})
+	}
+
+	account, err := mongo.GetAccount(t.User)
+	if err != nil {
+		return e.JSON(http.StatusInternalServerError, R {
+			"res": ResErrUnknown,
+		})
+	}
+
+	score, err := strconv.Atoi(e.FormValue("score"))
+	if err != nil {
+		return e.JSON(http.StatusBadRequest, R {
+			"res": ResErrInvalidCredit,
+		})
+	}
+
+	gameId := e.FormValue("gameId")
+	if !config.HasGame(gameId) {
+		return e.JSON(http.StatusForbidden, R {
+			"res": ResErrInvalidRequest,
+		})
+	}
+
+	err = mongo.SetScore(account, gameId, score)
+
+	return e.JSON(http.StatusOK, R {
+		"res": ResSuccess,
+	})
+}

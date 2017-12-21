@@ -18,6 +18,7 @@ type Account struct {
 	Hash        string
 	Credit		int
 	Gold        int
+	Score       map[string]int
 }
 
 type MongoConnection struct {
@@ -55,7 +56,7 @@ func (m *MongoConnection) AddAccount(id, password string, defaultCredit int, def
 		return
 	}
 
-	m.account.Insert(&Account {id, string(hash), defaultCredit, defaultGold})
+	m.account.Insert(&Account {id, string(hash), defaultCredit, defaultGold, map[string]int{}})
 	return
 }
 
@@ -87,6 +88,13 @@ func (m *MongoConnection) SubtractGold(id string, gold int) (err error) {
 	}
 
 	err = m.account.Update(bson.M{"id": account.Id}, bson.M{"$set": bson.M{"gold": account.Gold - gold}})
+	return
+}
+
+func (m *MongoConnection) SetScore(account Account, gameId string, score int) (err error) {
+	account.Score[gameId] = score
+
+	err = m.account.Update(bson.M{"id": account.Id}, bson.M{"$set": bson.M{"score": account.Score}})
 	return
 }
 

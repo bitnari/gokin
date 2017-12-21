@@ -16,8 +16,9 @@ import (
 
 type Config struct {
 	Server struct {
-		Port        int `json:"port"`
-		CreditPriority string `json:"creditPriority"`
+		Port            int `json:"port"`
+		CreditPriority  string `json:"creditPriority"`
+		Games           []string `json:"games"`
 	} `json:"server"`
 	DB struct {
 		Host        string `json:"host"`
@@ -25,6 +26,15 @@ type Config struct {
 	} `json:"database"`
 }
 var config Config
+
+func (c *Config) HasGame(game string) bool {
+	for _, g := range c.Server.Games {
+		if g == game {
+			return true
+		}
+	}
+	return false
+}
 
 var mongo MongoConnection
 
@@ -103,6 +113,7 @@ func main() {
 	e.POST("/api/v2/pay", Pay_v2)
 	e.POST("/api/v2/renew", RenewToken)
 	e.POST("/api/v2/account", Account_v2)
+	e.POST("/api/v2/score", Score_v2)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Server.Port)))
 }

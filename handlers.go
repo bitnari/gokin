@@ -19,6 +19,7 @@ const (
 	ResErrNoToken
 	ResErrNoGold
 	ResErrInvalidCredit
+	ResErrInvalidRequest
 )
 
 var tokens = TokenManager {[]Token{}}
