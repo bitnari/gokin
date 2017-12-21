@@ -5,6 +5,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"golang.org/x/crypto/bcrypt"
 	"errors"
+	"time"
 )
 
 var (
@@ -15,10 +16,10 @@ var (
 
 type Account struct {
 	Id          string
+	Name        string
 	Hash        string
 	Credit		int
 	Gold        int
-	Score       map[string]int
 }
 
 type MongoConnection struct {
@@ -26,6 +27,13 @@ type MongoConnection struct {
 
 	account     *mgo.Collection
 	score       *mgo.Collection
+}
+
+type Score struct {
+	Id          string
+	Score       int
+	Game        string
+	Time        time.Time
 }
 
 func (m *MongoConnection) Init(host, db string) (err error) {
@@ -41,7 +49,7 @@ func (m *MongoConnection) Init(host, db string) (err error) {
 	return nil
 }
 
-func (m *MongoConnection) AddAccount(id, password string, defaultCredit, defaultGold int) (err error) {
+func (m *MongoConnection) AddAccount(id, name, password string, defaultCredit, defaultGold int) (err error) {
 	count, err := m.account.Find(bson.M{"id": id}).Count()
 	if err != nil {
 		return
@@ -56,7 +64,7 @@ func (m *MongoConnection) AddAccount(id, password string, defaultCredit, default
 		return
 	}
 
-	m.account.Insert(&Account {id, string(hash), defaultCredit, defaultGold, map[string]int{}})
+	m.account.Insert(&Account {id, name, string(hash), defaultCredit, defaultGold})
 	return
 }
 
@@ -92,9 +100,18 @@ func (m *MongoConnection) SubtractGold(id string, gold int) (err error) {
 }
 
 func (m *MongoConnection) SetScore(account Account, gameId string, score int) (err error) {
-	account.Score[gameId] = score
+	err = m.score.Insert(&Score {account.Id, score, gameId, time.Now()})
+	return
+}
 
-	err = m.account.Update(bson.M{"id": account.Id}, bson.M{"$set": bson.M{"score": account.Score}})
+func (m *MongoConnection) AddCredit(id string, gold, credit int) (err error) {
+	var account Account
+	account, err = m.GetAccount(id)
+	if err != nil {
+		return
+	}
+
+	err = m.account.Update(bson.M{"id": account.Id}, bson.M{"$set": bson.M{"gold": account.Gold + gold, "credit": account.Credit + credit}})
 	return
 }
 
@@ -109,5 +126,27 @@ func (m *MongoConnection) GetAccount(id string) (account Account, err error) {
 		return account, ErrNoAccount
 	}
 
+	return
+}
+
+func (m *MongoConnection) GetRank(gameId string, limit int) (results []Score, err error) {
+	p1 := bson.M {
+		"$match": bson.M {"game": gameId},
+	}
+	p2 := bson.M {
+		"$group": bson.M {
+			"_id": "$id",
+			"score": bson.M {"$max": "$score"},
+		},
+	}
+	p3 := bson.M {
+		"$sort": bson.M {
+			"score": -1,
+		},
+	}
+	p4 := bson.M {
+		"$limit": 5,
+	}
+	err = m.score.Pipe([]bson.M {p1, p2, p3, p4}).All(&results)
 	return
 }

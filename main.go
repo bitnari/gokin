@@ -104,10 +104,10 @@ func main() {
 	e.GET("/dist/*", echo.WrapHandler(http.StripPrefix("/dist/", fs)))
 	e.File("/", path.Join(AppPath, "kakin", "index.html"))
 
-	e.POST("/api/v1/verify", VerifyAccount)
-	e.POST("/api/v1/account", GetAccount)
-	e.POST("/api/v1/renew", RenewToken)
-	e.POST("/api/v1/usegold", SubtractGold)
+	//e.POST("/api/v1/verify", VerifyAccount)
+	//e.POST("/api/v1/account", GetAccount)
+	//e.POST("/api/v1/renew", RenewToken)
+	//e.POST("/api/v1/usegold", SubtractGold)
 
 	e.POST("/api/v2/register", RegisterHandler)
 	e.POST("/api/v2/verify", VerifyAccount_v2)
@@ -115,6 +115,8 @@ func main() {
 	e.POST("/api/v2/renew", RenewToken)
 	e.POST("/api/v2/account", Account_v2)
 	e.POST("/api/v2/score", Score_v2)
+	e.POST("/api/v2/charge", AddCredit_v2)
+	e.POST("/api/v2/rank", Rank_v2)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Server.Port)))
 }

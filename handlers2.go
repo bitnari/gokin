@@ -4,6 +4,8 @@ import (
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
+	"encoding/json"
+	"fmt"
 )
 
 func Pay_v2(e echo.Context) error {
@@ -124,6 +126,7 @@ func Account_v2(e echo.Context) error {
 	return e.JSON(http.StatusOK, R {
 		"res": ResSuccess,
 		"id": account.Id,
+		"name": account.Name,
 		"gold": account.Gold,
 		"credit": account.Credit,
 	})
@@ -169,5 +172,77 @@ func Score_v2(e echo.Context) error {
 
 	return e.JSON(http.StatusOK, R {
 		"res": ResSuccess,
+	})
+}
+
+func AddCredit_v2(e echo.Context) error {
+	id := toId(e.FormValue("grade"), e.FormValue("class"), e.FormValue("id"))
+	if len(id) != 5 {
+		return e.JSON(http.StatusBadRequest, R {
+			"res": ResErrIdLenMismatch, // 유저이름의 문자열 길이가 틀리다
+		})
+	}
+
+	gold, err := strconv.Atoi(e.FormValue("gold"))
+	g := 0
+	if err == nil {
+		g = gold
+	}
+
+	credit, err := strconv.Atoi(e.FormValue("credit"))
+	c := 0
+	if err == nil {
+		c = credit
+	}
+
+	err = mongo.AddCredit(id, g, c)
+	if err != nil {
+		return e.JSON(http.StatusInternalServerError, R {
+			"res": ResErrUnknown,
+		})
+	}
+
+	return e.JSON(http.StatusOK, R {
+		"res": ResSuccess,
+	})
+}
+
+func Rank_v2(e echo.Context) error {
+	game := e.FormValue("game")
+	limit, err := strconv.Atoi(e.FormValue("limit"))
+	if err != nil {
+		return e.JSON(http.StatusBadRequest, R {
+			"res": ResErrInvalidRequest,
+		})
+	}
+
+	results, err := mongo.GetRank(game, limit)
+	if err != nil {
+		fmt.Println(err)
+		return e.JSON(http.StatusInternalServerError, R {
+			"res": ResErrUnknown,
+		})
+	}
+
+	type Serve struct {
+		Id      string `json:"id"`
+		Score   int `json:"score"`
+	}
+	var serve []Serve
+
+	for _, r := range results {
+		serve = append(serve, Serve {r.Id, r.Score})
+	}
+
+	b, err := json.Marshal(serve)
+	if err != nil {
+		return e.JSON(http.StatusInternalServerError, R {
+			"res": ResErrUnknown,
+		})
+	}
+	return e.JSON(http.StatusOK, R {
+		"res": ResSuccess,
+		"game": game,
+		"rank": string(b),
 	})
 }

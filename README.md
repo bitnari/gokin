@@ -31,7 +31,7 @@ A backend server for [Kakin](https://github.com/bitnari/kakin)
 --|--|--
 grade | 학년 | 1
 class | 반 | 1
-id | 반 번호 | 1
+id | 학번 | 1
 password | 유저의 비밀번호 | specialpassword1234
 
 
@@ -175,16 +175,17 @@ token | 토큰 | (32자 랜덤 문자열)
 --|--|--
 res | 성공 여부 | 0
 id | 학생 식별자 | 10101
+name | 학생 이름 | 강길동
 credit | 계정의 크레딧 | 1000
 gold | 계정의 골드 | 1000
 
 
 **응답 예시**
 ```
-Status 418 Teapot
+Status 500 InternalServerError
 
 {
-	"res": 7
+	"res": 1
 }
 ```
 
@@ -211,9 +212,42 @@ res | 성공 여부 | 0
 
 **응답 예시**
 ```
-Status 418 Teapot
+Status 500 InternalServerError
 
 {
-	"res": 7
+	"res": 1
+}
+```
+
+
+### 랭킹 불러오기
+게임의 랭킹을 불러올 때 사용합니다.
+
+```POST /api/v2/rank ```
+
+**요청 파라미터**
+
+키 | 설명 | 예시
+--|--|--
+game | 게임 아이디 | doom
+limit | 상위 몇개로 제한 | 5
+
+**응답**
+
+키 | 설명 | 예시
+--|--|--
+res | 성공 여부 | 0
+rank | 랭킹 (내림차순) | (JSON 포맷)
+game | 게임 아이디 | doom
+
+
+**응답 예시**
+```
+Status 200 OK
+
+{
+    "game": "doom",
+    "rank": "[{\"id\":\"\",\"score\":2044},{\"id\":\"\",\"score\":1000},{\"id\":\"\",\"score\":333},{\"id\":\"\",\"score\":311}]",
+    "res": 0
 }
 ```
