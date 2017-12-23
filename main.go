@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"encoding/json"
 	"io/ioutil"
 	"path"
@@ -87,6 +88,17 @@ func init() {
 	}
 }
 
+/* func CORSKakin(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		res := c.Response()
+		res.Header().Set(echo.HeaderAccessControlAllowOrigin, "kakin://kakin")
+		
+		return next(c)
+	}
+	
+	Custom protocols are not supported. Should use wildcard.
+} */
+	
 func main() {
 	if config.Server.CreditPriority != "gold" && config.Server.CreditPriority != "credit" {
 		panic(errors.New(`config creditPriority must be "credit" or "gold"`))
@@ -99,6 +111,8 @@ func main() {
 	}
 
 	e := echo.New()
+	
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{}))
 
 	fs := http.FileServer(http.Dir(path.Join(AppPath, "kakin", "dist")))
 	e.GET("/dist/*", echo.WrapHandler(http.StripPrefix("/dist/", fs)))
