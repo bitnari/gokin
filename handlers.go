@@ -148,20 +148,35 @@ func SubtractGold(e echo.Context) error {
 			"res": ResErrUnknown,
 		})
 	}
-
-	t, err := tokens.Get(token)
-	if err != nil {
-		return e.JSON(http.StatusUnauthorized, R {
-			"res": ResErrNoToken,
-		})
+	
+	var account Account
+	var mongoErr error
+	
+	if config.Server.AdminToken != token {
+		t, err := tokens.Get(token)
+		
+		if err != nil {
+			return e.JSON(http.StatusUnauthorized, R {
+				"res": ResErrNoToken,
+			})
+		}
+		
+		account, mongoErr = mongo.GetAccount(t.User)
+		if mongoErr != nil {
+			return e.JSON(http.StatusInternalServerError, R {
+				"res": ResErrUnknown,
+			})
+		}
+	} else {
+		account, mongoErr = mongo.GetAccount(e.FormValue("id"))
+		
+		if mongoErr != nil {
+			return e.JSON(http.StatusInternalServerError, R {
+				"res": ResErrUnknown,
+			})
+		}
 	}
 
-	account, err := mongo.GetAccount(t.User)
-	if err != nil {
-		return e.JSON(http.StatusInternalServerError, R {
-			"res": ResErrUnknown,
-		})
-	}
 
 	if gold < 0 {
 		gold = -gold

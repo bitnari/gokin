@@ -16,18 +16,32 @@ func Pay_v2(e echo.Context) error {
 		})
 	}
 
-	t, err := tokens.Get(token)
-	if err != nil {
-		return e.JSON(http.StatusUnauthorized, R {
-			"res": ResErrNoToken,
-		})
-	}
-
-	account, err := mongo.GetAccount(t.User)
-	if err != nil {
-		return e.JSON(http.StatusInternalServerError, R {
-			"res": ResErrUnknown,
-		})
+	var account Account
+	var mongoErr error
+	
+	if config.Server.AdminToken != token {
+		t, err := tokens.Get(token)
+		
+		if err != nil {
+			return e.JSON(http.StatusUnauthorized, R {
+				"res": ResErrNoToken,
+			})
+		}
+		
+		account, mongoErr = mongo.GetAccount(t.User)
+		if mongoErr != nil {
+			return e.JSON(http.StatusInternalServerError, R {
+				"res": ResErrUnknown,
+			})
+		}
+	} else {
+		account, mongoErr = mongo.GetAccount(e.FormValue("id"))
+		
+		if mongoErr != nil {
+			return e.JSON(http.StatusInternalServerError, R {
+				"res": ResErrUnknown,
+			})
+		}
 	}
 
 	credit, err := strconv.Atoi(e.FormValue("credit"))
@@ -193,6 +207,19 @@ func AddCredit_v2(e echo.Context) error {
 	c := 0
 	if err == nil {
 		c = credit
+	}
+	
+	token := e.FormValue("token")
+	if len(token) != 32 {
+		return e.JSON(http.StatusBadRequest, R {
+			"res": ResErrInvalidToken,
+		})
+	}
+	
+	if token != config.Server.AdminToken {
+		return e.JSON(http.StatusUnauthorized, R {
+			"res": ResErrNoToken,
+		})
 	}
 
 	err = mongo.AddCredit(id, g, c)

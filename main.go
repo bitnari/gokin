@@ -20,6 +20,7 @@ type Config struct {
 		Port            int `json:"port"`
 		CreditPriority  string `json:"creditPriority"`
 		Games           []string `json:"games"`
+		AdminToken      string `json:"adminToken"`
 	} `json:"server"`
 	DB struct {
 		Host        string `json:"host"`
