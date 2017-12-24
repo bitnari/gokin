@@ -146,6 +146,43 @@ func Account_v2(e echo.Context) error {
 	})
 }
 
+func AccountAdmin_v2(e echo.Context) error {
+	id := toId(e.FormValue("grade"), e.FormValue("class"), e.FormValue("id"))
+	if len(id) != 5 {
+		return e.JSON(http.StatusBadRequest, R {
+			"res": ResErrIdLenMismatch, // 유저이름의 문자열 길이가 틀리다
+		})
+	}
+	
+	token := e.FormValue("token")
+	if len(token) != 32 {
+		return e.JSON(http.StatusBadRequest, R {
+			"res": ResErrInvalidToken,
+		})
+	}
+	
+	if token != config.Server.AdminToken {
+		return e.JSON(http.StatusUnauthorized, R {
+			"res": ResErrNoToken,
+		})
+	}
+	
+	account, err := mongo.GetAccount(id)
+	if err != nil {
+		return e.JSON(http.StatusInternalServerError, R {
+			"res": ResErrUnknown,
+		})
+	}
+
+	return e.JSON(http.StatusOK, R {
+		"res": ResSuccess,
+		"id": account.Id,
+		"name": account.Name,
+		"gold": account.Gold,
+		"credit": account.Credit,
+	})
+}
+
 func Score_v2(e echo.Context) error {
 	token := e.FormValue("token")
 	if len(token) != 32 {
