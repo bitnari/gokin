@@ -32,6 +32,7 @@ type MongoConnection struct {
 type Score struct {
 	Id          string
 	Score       int
+	Name        string
 	Game        string
 	Time        time.Time
 }
@@ -100,7 +101,7 @@ func (m *MongoConnection) SubtractGold(id string, gold int) (err error) {
 }
 
 func (m *MongoConnection) SetScore(account Account, gameId string, score int) (err error) {
-	err = m.score.Insert(&Score {account.Id, score, gameId, time.Now()})
+	err = m.score.Insert(&Score {account.Id, score, account.Name, gameId, time.Now()})
 	return
 }
 
@@ -135,18 +136,28 @@ func (m *MongoConnection) GetRank(gameId string, limit int) (results []Score, er
 	}
 	p2 := bson.M {
 		"$group": bson.M {
-			"_id": "$id",
+			"_id": bson.M {
+				"id": "$id",
+				"name": "$name",
+			},
 			"score": bson.M {"$max": "$score"},
 		},
 	}
 	p3 := bson.M {
+		"$project": bson.M {
+			"id": "$_id.id",
+			"name": "$_id.name",
+			"score": "$score",
+		},
+	}
+	p4 := bson.M {
 		"$sort": bson.M {
 			"score": -1,
 		},
 	}
-	p4 := bson.M {
+	p5 := bson.M {
 		"$limit": 5,
 	}
-	err = m.score.Pipe([]bson.M {p1, p2, p3, p4}).All(&results)
+	err = m.score.Pipe([]bson.M {p1, p2, p3, p4, p5,}).All(&results)
 	return
 }

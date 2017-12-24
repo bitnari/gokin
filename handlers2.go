@@ -226,12 +226,13 @@ func Rank_v2(e echo.Context) error {
 
 	type Serve struct {
 		Id      string `json:"id"`
+		Name    string `json:"name"`
 		Score   int `json:"score"`
 	}
 	var serve []Serve
 
 	for _, r := range results {
-		serve = append(serve, Serve {r.Id, r.Score})
+		serve = append(serve, Serve {r.Id, r.Name, r.Score})
 	}
 
 	b, err := json.Marshal(serve)
